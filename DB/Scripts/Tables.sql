@@ -3,7 +3,7 @@ USE air_tickets_search_and_booking;
 CREATE TABLE person
 (
 	id INT IDENTITY(1,1) PRIMARY KEY,
-	name NVARCHAR(80) NOT NULL,
+	[name] NVARCHAR(80) NOT NULL,
 	surname NVARCHAR(80) NOT NULL,
 	birth_date DATE NOT NULL,
 	CONSTRAINT CK_person_is_adult
@@ -106,7 +106,7 @@ CREATE TABLE plane_to_flight
 CREATE TABLE ticket_status
 (
 	id INT IDENTITY(1,1) PRIMARY KEY,
-	name NVARCHAR(30) NOT NULL UNIQUE
+	[name] NVARCHAR(30) NOT NULL UNIQUE
 );
 
 CREATE TABLE ticket_class
