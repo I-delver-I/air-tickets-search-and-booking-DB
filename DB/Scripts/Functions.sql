@@ -73,7 +73,7 @@ RETURNS BIT
 WITH EXECUTE AS CALLER
 AS
 BEGIN
-	DECLARE @ticket_class_name NVARCHAR = 
+	DECLARE @ticket_class_name NVARCHAR(30) = 
 	(
 		SELECT tc.[name]
 		FROM ticket_class AS tc
@@ -97,7 +97,7 @@ BEGIN
 			WHERE p.id = @plane_id
 		) - dbo.GetTicketsCount(@ticket_class_name, @plane_id)
 
-	IF (@unbooked_seats_count > 0)
+	IF (@unbooked_seats_count + 1 > 0)
 		RETURN 1
 
 	RETURN 0
@@ -128,15 +128,26 @@ WITH EXECUTE AS CALLER
 AS
 BEGIN
 	IF EXISTS (
-		SELECT TOP 1 * FROM [user] AS u
-		INNER JOIN ticket_booking AS tb
-		ON tb.[user_id] = u.person_id
-		INNER JOIN ticket AS t
-		ON t.id = tb.ticket_id
+		SELECT * FROM [user] AS u
 		WHERE u.person_id = @user_id 
 			AND u.dollars_count >= @money_to_pay
 	)
 		RETURN 1
 
 	RETURN 0
+END;
+
+GO
+CREATE FUNCTION dbo.UserHasEnoughMoneyToBuyTicket(@user_id INT, @ticket_id INT)
+RETURNS BIT 
+WITH EXECUTE AS CALLER
+AS
+BEGIN
+	DECLARE @ticket_price MONEY = (
+		SELECT t.price
+		FROM ticket AS t
+		WHERE t.id = @ticket_id
+	)
+
+	RETURN dbo.UserHasEnoughMoneyToPay(@user_id, @ticket_price)
 END;

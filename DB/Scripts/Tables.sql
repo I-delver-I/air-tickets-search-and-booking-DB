@@ -118,14 +118,16 @@ CREATE TABLE ticket_class
 CREATE TABLE ticket
 (
 	id INT IDENTITY(1,1) PRIMARY KEY,
-	status_id INT,
+	status_id INT
+		CONSTRAINT DF_available
+		DEFAULT dbo.GetTicketStatusIdByName('Available'),
 	ticket_ñlass_id INT,
 	price MONEY NOT NULL,
 	plane_id INT,
 	flight_name NVARCHAR(7),
 	flight_date DATETIME
 		CONSTRAINT DF_flight_date_in_three_months
-			DEFAULT DATEADD(MONTH, 3, GETDATE()),
+		DEFAULT DATEADD(MONTH, 3, GETDATE()),
 	CONSTRAINT FK_ticket_ticket_status
 		FOREIGN KEY (status_id)
 		REFERENCES ticket_status(id),
@@ -139,12 +141,12 @@ CREATE TABLE ticket
 	CONSTRAINT CK_plane_has_not_attached_flight_on_the_date
 		CHECK (dbo.PlaneHasAttachedFlightOnTheDate(plane_id, flight_date) = 1),
 	CONSTRAINT CK_new_ticket_can_be_created
-		CHECK (dbo.SeatForNewTicketIsAvailable(ticket_ñlass_id, plane_id) = 0)
+		CHECK (dbo.SeatForNewTicketIsAvailable(ticket_ñlass_id, plane_id) = 1)
 );
 
 CREATE TABLE ticket_booking
 (
-	[user_id] INT UNIQUE,
+	[user_id] INT,
 	ticket_id INT UNIQUE,
 	[current_date] DATETIME
 		CONSTRAINT DF_current_date_is_today
@@ -155,5 +157,7 @@ CREATE TABLE ticket_booking
 		REFERENCES [user](person_id),
 	CONSTRAINT FK_ticket_booking_ticket
 		FOREIGN KEY (ticket_id)
-		REFERENCES ticket(id)
+		REFERENCES ticket(id),
+	CONSTRAINT CK_user_has_enough_money_to_buy_ticket
+		CHECK (dbo.UserHasEnoughMoneyToBuyTicket([user_id], ticket_id) = 1)
 );
